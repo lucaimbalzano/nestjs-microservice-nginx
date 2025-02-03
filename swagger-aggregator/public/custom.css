@@ -1,0 +1,16 @@
+/* Change the background color of the topbar */
+.swagger-ui .topbar {
+    background-color: #201821 !important; /* Your desired color */
+  }
+  
+  /* Hide the default Swagger logo */
+  .swagger-ui .topbar .swagger-ui-logo {
+    display: none;
+  }
+  
+  /* Optional: Adjust the position of the custom logo if needed */
+  .swagger-ui .topbar img {
+    position: relative;
+    top: 5px;
+  }
+  

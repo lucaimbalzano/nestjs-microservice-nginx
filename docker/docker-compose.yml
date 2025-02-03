@@ -1,0 +1,170 @@
+version: '3.9'
+
+services:
+  # PostgreSQL for Book Service
+  book-db:
+    image: postgres:15
+    container_name: book-db
+    restart: always
+    shm_size: 512mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: book
+    ports:
+      - "5439:5432"
+    volumes:
+      - book-db-data:/var/lib/postgresql/data
+    networks:
+      - ng-app-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Book Service
+  book-service:
+    build:
+      context: ..
+      dockerfile: books/Dockerfile
+    container_name: book-service
+    restart: always
+    depends_on:
+      book-db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: book-db
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: book
+    ports:
+      - "3002:3000"
+    networks:
+      - ng-app-network
+
+  # PostgreSQL for Order Service
+  order-db:
+    image: postgres:15
+    container_name: order-db
+    restart: always
+    shm_size: 512mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: order
+    ports:
+      - "5433:5432"
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    networks:
+      - ng-app-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Order Service
+  order-service:
+    build:
+      context: ..
+      dockerfile: orders/Dockerfile
+    container_name: order-service
+    restart: always
+    depends_on:
+      order-db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: order-db
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: order
+    ports:
+      - "3001:3000"
+    networks:
+      - ng-app-network
+
+  # PostgreSQL for Customer Service
+  customer-db:
+    image: postgres:15
+    container_name: customer-db
+    restart: always
+    shm_size: 512mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: customer
+    ports:
+      - "5434:5432"
+    volumes:
+      - customer-db-data:/var/lib/postgresql/data
+    networks:
+      - ng-app-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Customer Service
+  customer-service:
+    build:
+      context: ..
+      dockerfile: customers/Dockerfile
+    container_name: customer-service
+    restart: always
+    depends_on:
+      customer-db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: customer-db
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: customer
+    ports:
+      - "3004:3000"
+    networks:
+      - ng-app-network
+  
+  # API Aggregation Service (Optional for Unified Swagger)
+  swagger-aggregator:
+    build:
+      context: ../swagger-aggregator
+    container_name: swagger-aggregator
+    restart: unless-stopped
+    depends_on:
+      - book-service
+      - order-service
+      - customer-service
+    ports:
+      - "4000:4000"
+    networks:
+      - ng-app-network
+
+  # Nginx Reverse Proxy Service
+  nginx:
+    build:
+        context: ../nginx
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - book-service
+      - order-service
+      - customer-service
+    networks:
+      - ng-app-network
+
+networks:
+  ng-app-network:
+
+volumes:
+  book-db-data:
+  order-db-data:
+  customer-db-data:
