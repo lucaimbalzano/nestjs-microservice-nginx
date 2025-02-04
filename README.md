@@ -19,6 +19,12 @@
 Install pnpm
 $ npm install -g pnpm
 $ pnpm install
+
+
+$ npm i -g @nestjs/cli
+$ nest new 
+call one microservice orders, one customers and one books
+$ nest new microservice.name
 ```
 
 ## amqp
@@ -119,7 +125,7 @@ curl -v http://localhost/nginx_status
 > 
 < HTTP/1.1 200 OK
 < Server: nginx/1.27.3
-< Date: Mon, 03 Feb 2025 17:46:36 GMT
+< Date: Mon, 03 Feb 2025
 < Content-Type: text/plain
 < Content-Length: 97
 < Connection: keep-alive
